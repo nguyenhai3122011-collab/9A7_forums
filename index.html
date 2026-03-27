@@ -3,41 +3,365 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>9A7 Community Forum</title>
+    <title>Diễn đàn 9A7 - Kết Nối & Chia Sẻ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; }
-        .header { color: #2c3e50; text-align: center; margin-bottom: 20px; }
-        .post-form { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 30px; }
-        input, textarea { width: 100%; margin-bottom: 12px; padding: 12px; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; outline: none; }
-        button { background: #3498db; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button:hover { background: #2980b9; }
-        .post-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: relative; border-left: 5px solid #3498db; }
-        .user-name { font-weight: bold; color: #34495e; display: block; margin-bottom: 5px; }
-        .post-time { font-size: 11px; color: #95a5a6; position: absolute; top: 15px; right: 15px; }
-        .post-text { color: #444; line-height: 1.5; white-space: pre-wrap; }
-        .post-img { width: 100%; border-radius: 8px; margin-top: 10px; display: block; }
+        /* --- 1. CẤU HÌNH MÀU SẮC (CSS VARIABLES) --- */
+        :root {
+            --primary: #0084ff;
+            --bg-color: #f0f2f5;
+            --grid-color: rgba(0, 132, 255, 0.05); /* Màu ô vuông sáng */
+            --node-color: rgba(0, 132, 255, 0.1); /* Màu chấm nối sáng */
+            --card-bg: #ffffff;
+            --text-main: #1c1e21;
+            --text-sub: #65676b;
+            --input-bg: #f5f6f7;
+            --border: #ddd;
+            --overlay: rgba(0,0,0,0.5);
+            --transition: all 0.3s ease;
+        }
+
+        /* --- 2. CẤU HÌNH DARK MODE --- */
+        body.dark-mode {
+            --bg-color: #18191a;
+            --grid-color: rgba(255, 255, 255, 0.03); /* Màu ô vuông tối */
+            --node-color: rgba(255, 255, 255, 0.06); /* Màu chấm nối tối */
+            --card-bg: #242526;
+            --text-main: #e4e6eb;
+            --text-sub: #b0b3b8;
+            --input-bg: #3a3b3c;
+            --border: #444;
+            --overlay: rgba(0,0,0,0.7);
+        }
+
+        /* --- 3. PHẦN NỀN Ô VUÔNG VÀ CHẤM NỐI --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: var(--transition);
+            /* Tạo nền grid */
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px; /* Kích thước ô vuông */
+            min-height: 100vh;
+        }
+
+        /* Tạo các chấm nối */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: radial-gradient(var(--node-color) 1.5px, transparent 1px);
+            background-size: 30px 30px; /* Trùng với size ô vuông */
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        /* --- 4. GIAO DIỆN CHÍNH --- */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 60px; /* Chừa chỗ cho header */
+            padding-bottom: 100px; /* Chừa chỗ cho nút đăng bài */
+        }
+
+        /* Header cố định ở trên */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(24, 25, 26, 0.9); /* Nền hơi trong suốt */
+            backdrop-filter: blur(10px); /* Làm mờ nền */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
+            z-index: 100;
+            box-shadow: 0 1px 10px rgba(0,0,0,0.1);
+        }
+        
+        body:not(.dark-mode) header {
+            background: rgba(240, 242, 245, 0.9);
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 20px;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        /* Nút chuyển đổi sáng/tối */
+        #themeToggle {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 110;
+            transition: var(--transition);
+        }
+        #themeToggle:hover { background: #333; color: #fff; }
+
+        /* --- 5. DANH SÁCH BÀI ĐĂNG (PHẦN CHÍNH) --- */
+        #listPosts {
+            display: grid;
+            gap: 16px;
+        }
+
+        .post-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            /* Hiệu ứng Fade In */
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 15px;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+
+        .user-info b {
+            font-size: 15px;
+        }
+
+        .user-info i {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-style: normal;
+        }
+
+        .post-text {
+            font-size: 16px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .post-img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 12px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-sub);
+            margin-top: 30px;
+        }
+
+        /* --- 6. NÚT ĐĂNG BÀI FLOATING (+ AT CORNER) --- */
+        #btnOpenModal {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 32px;
+            font-weight: 300;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,132,255,0.4);
+            z-index: 150;
+            transition: var(--transition);
+        }
+
+        #btnOpenModal:hover {
+            transform: scale(1.1) rotate(90deg);
+            background-color: #0073e6;
+        }
+
+        /* --- 7. MODAL (KHUNG SOẠN THẢO BÀI ĐĂNG) --- */
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: var(--overlay);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: var(--transition);
+            transform: scale(0.9);
+            border: 1px solid var(--border);
+        }
+
+        .modal.open .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0; font-size: 20px; font-weight: 700;
+        }
+
+        .close-modal {
+            background: none; border: none; font-size: 24px; color: var(--text-sub); cursor: pointer; padding: 0;
+        }
+
+        /* Form nhập liệu */
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        input, textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.2s;
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+            background-color: var(--card-bg);
+            box-shadow: 0 0 0 3px rgba(0,132,255,0.1);
+        }
+
+        textarea { resize: none; }
+
+        #btnSend {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        #btnSend:hover {
+            background: #0073e6;
+        }
+
+        #btnSend:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header"><h1>Lớp 9A7 Forum</h1></div>
+    <header>
+        <h1>Diễn đàn lớp 9A7</h1>
+    </header>
+    <button id="themeToggle">Tối 🌙</button>
 
-    <div class="post-form">
-        <input type="text" id="name" placeholder="Tên bạn (Bỏ trống để ẩn danh)">
-        <textarea id="content" rows="3" placeholder="Hôm nay lớp mình có gì hot?"></textarea>
-        <input type="text" id="image" placeholder="Dán link ảnh (nếu có)">
-        <button id="btnSend" onclick="addPost()">Đăng bài</button>
+    <div class="container">
+        <div id="listPosts"><div class="loading">Đang tải bản tin...</div></div>
     </div>
 
-    <div id="listPosts">Đang tải bài viết...</div>
-</div>
+    <button id="btnOpenModal">+</button>
+
+    <div class="modal" id="postModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Đăng bài mới</h2>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="name" placeholder="Tên của bạn (Ẩn danh nếu trống)">
+            </div>
+            <div class="input-group">
+                <textarea id="content" rows="4" placeholder="Hôm nay có gì vui thế?"></textarea>
+            </div>
+            <div class="input-group">
+                <input type="text" id="image" placeholder="Dán link ảnh tại đây (nếu có)">
+            </div>
+            <button id="btnSend" onclick="addPost()">Đăng ngay</button>
+        </div>
+    </div>
 
 <script>
-    // Đã sửa thành /posts theo đúng Schema của bạn
+    // Link API_URL đã được sửa lỗi /posts
     const API_URL = "https://69c6a848f272266f3eaceee2.mockapi.io/posts"; 
+    const modal = document.getElementById('postModal');
 
+    // 1. Chức năng Tải bài đăng
     async function loadPosts() {
         try {
             const res = await fetch(API_URL);
@@ -46,26 +370,34 @@
             div.innerHTML = "";
             
             if (!Array.isArray(posts) || posts.length === 0) {
-                div.innerHTML = "<p style='text-align:center; color:#888;'>Chưa có bài đăng nào.</p>";
+                div.innerHTML = "<p style='text-align:center; color:var(--text-sub);'>Chưa có bài đăng nào. Hãy mở bát đi!</p>";
                 return;
             }
 
             [...posts].reverse().forEach(p => {
                 const time = p.createdAt ? new Date(p.createdAt).toLocaleString('vi-VN') : "Vừa xong";
+                const firstChar = (p.name || "A").charAt(0);
+                
                 div.innerHTML += `
                     <div class="post-card">
-                        <span class="user-name">👤 ${p.name || "Ẩn danh"}</span>
-                        <span class="post-time">${time}</span>
+                        <div class="post-header">
+                            <div class="avatar">${firstChar}</div>
+                            <div class="user-info">
+                                <b>👤 ${p.name || "Người ẩn danh"}</b>
+                                <i>${time}</i>
+                            </div>
+                        </div>
                         <div class="post-text">${p.content}</div>
                         ${p.image ? `<img src="${p.image}" class="post-img" onerror="this.style.display='none'">` : ""}
                     </div>
                 `;
             });
         } catch (e) {
-            document.getElementById('listPosts').innerHTML = "Lỗi tải bài viết. Hãy kiểm tra lại API!";
+            document.getElementById('listPosts').innerHTML = "<p style='color:red; text-align:center;'>Lỗi tải bản tin!</p>";
         }
     }
 
+    // 2. Chức năng Đăng bài
     async function addPost() {
         const name = document.getElementById('name').value.trim();
         const content = document.getElementById('content').value.trim();
@@ -82,7 +414,7 @@
                 method: 'POST',
                 headers: {'content-type':'application/json'},
                 body: JSON.stringify({ 
-                    name: name || "Ẩn danh", 
+                    name: name || "Người ẩn danh", 
                     content: content, 
                     image: image,
                     createdAt: new Date().toISOString()
@@ -91,14 +423,31 @@
 
             document.getElementById('content').value = "";
             document.getElementById('image').value = "";
-            await loadPosts();
+            closeModal(); // Đóng khung soạn thảo
+            await loadPosts(); // Tải lại ngay
         } catch (e) {
             alert("Gửi bài thất bại!");
         } finally {
             btn.disabled = false;
-            btn.innerText = "Đăng bài";
+            btn.innerText = "Đăng ngay";
         }
     }
+
+    // 3. Xử lý Giao diện (Modal, Theme)
+    function openModal() { modal.classList.add('open'); }
+    function closeModal() { modal.classList.remove('open'); }
+    
+    document.getElementById('btnOpenModal').addEventListener('click', openModal);
+    modal.addEventListener('click', (e) => {
+        if(e.target === modal) closeModal(); // Bấm ra ngoài thì đóng
+    });
+
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        themeToggle.innerText = isDark ? "Sáng ☀️" : "Tối 🌙";
+    });
 
     loadPosts();
 </script>
