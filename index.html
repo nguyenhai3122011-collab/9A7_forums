@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9A7 - Forum Lớp Chúng Mình</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0084ff;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #1c1e21;
+            --text-sub: #65676b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        /* Khung soạn thảo */
+        .editor-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        input, textarea {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+            background: #f9f9f9;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary-color);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0,132,255,0.1);
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #0073e6;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Danh sách bài đăng */
+        .post-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            text-transform: uppercase;
+        }
+
+        .user-info b {
+            display: block;
+            font-size: 15px;
+        }
+
+        .user-info i {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-style: normal;
+        }
+
+        .post-content {
+            font-size: 16px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .post-img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        .status-msg {
+            text-align: center;
+            color: var(--text-sub);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>9A7 Community</h1>
+    </header>
+
+    <div class="editor-box">
+        <div class="input-group">
+            <input type="text" id="userName" placeholder="Bạn tên là gì? (để trống sẽ ẩn danh)">
+        </div>
+        <div class="input-group">
+            <textarea id="postContent" rows="3" placeholder="Viết gì đó lên bảng tin lớp mình..."></textarea>
+        </div>
+        <div class="input-group">
+            <input type="text" id="imageUrl" placeholder="Dán link ảnh tại đây (nếu có)">
+        </div>
+        <button onclick="submitPost()" id="btnSubmit">Đăng bài</button>
+    </div>
+
+    <div id="forumContainer">
+        <div class="status-msg">Đang tải bài viết mới nhất...</div>
+    </div>
+</div>
+
+<script>
+    // Link Google Script của bạn đã được tích hợp
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz63UYepcUtIpMMapeLEidKJvcssEW-Fw2dMfoWVccCMvhK6ZZBLV7iN3YXIMegEOEn/exec";
+
+    // Hàm tải bài viết
+    async function loadPosts() {
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const posts = await response.json();
+            const container = document.getElementById('forumContainer');
+            
+            if (posts.length === 0) {
+                container.innerHTML = "<div class='status-msg'>Chưa có bài viết nào. Hãy là người đầu tiên!</div>";
+                return;
+            }
+
+            container.innerHTML = "";
+            posts.reverse().forEach(p => {
+                const name = p[0] || "Ẩn danh";
+                const content = p[1];
+                const img = p[2];
+                const date = p[3];
+                const firstChar = name.charAt(0);
+
+                container.innerHTML += `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="avatar">${firstChar}</div>
+                            <div class="user-info">
+                                <b>${name}</b>
+                                <i>${date}</i>
+                            </div>
+                        </div>
+                        <div class="post-content">${content}</div>
+                        ${img ? `<img src="${img}" class="post-img" onerror="this.style.display='none'">` : ""}
+                    </div>
+                `;
+            });
+        } catch (error) {
+            document.getElementById('forumContainer').innerHTML = "Lỗi khi tải dữ liệu.";
+        }
+    }
+
+    // Hàm gửi bài
+    async function submitPost() {
+        const btn = document.getElementById('btnSubmit');
+        const name = document.getElementById('userName').value.trim() || "Ẩn danh";
+        const content = document.getElementById('postContent').value.trim();
+        const image = document.getElementById('imageUrl').value.trim();
+        const date = new Date().toLocaleString('vi-VN', { hour12: false });
+
+        if (!content) {
+            alert("Bạn quên nhập nội dung rồi!");
+            return;
+        }
+        
+        btn.innerText = "Đang đăng...";
+        btn.disabled = true;
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: 'no-cors', // Dùng no-cors để tránh lỗi bảo mật khi gửi từ GitHub
+                body: JSON.stringify({ name, content, image, date })
+            });
+
+            // Vì no-cors không trả về kết quả nên ta đợi 1 chút rồi reset
+            setTimeout(() => {
+                document.getElementById('postContent').value = "";
+                document.getElementById('imageUrl').value = "";
+                btn.innerText = "Đăng bài";
+                btn.disabled = false;
+                loadPosts(); // Cập nhật lại danh sách
+            }, 1000);
+
+        } catch (error) {
+            alert("Gửi bài thất bại, hãy thử lại!");
+            btn.disabled = false;
+            btn.innerText = "Đăng bài";
+        }
+    }
+
+    // Tự động tải bài khi mở trang
+    loadPosts();
+</script>
+
+</body>
+</html>
