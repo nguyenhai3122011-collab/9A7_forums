@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diễn đàn 9A7 - Kết Nối</title>
+    <title>Diễn đàn 9A7</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -23,6 +23,8 @@
             color: var(--text-main); margin: 0; transition: background 0.5s ease;
             background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 30px 30px; min-height: 100vh;
+            /* Căn giữa toàn bộ nội dung body */
+            display: flex; flex-direction: column; align-items: center;
         }
 
         header {
@@ -35,13 +37,30 @@
 
         #themeToggle { position: fixed; top: 15px; right: 15px; z-index: 110; cursor: pointer; border: none; background: none; font-size: 20px; }
 
-        .container { width: 100%; max-width: 500px; margin-top: 80px; padding-bottom: 100px; }
+        /* Container đã được căn giữa */
+        .container { 
+            width: 95%; 
+            max-width: 500px; 
+            margin-top: 80px; 
+            padding-bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px; /* Khoảng cách giữa các bài đăng dạng list */
+        }
 
         .post-card {
-            background: var(--card-bg); padding: 16px; border-radius: 16px;
-            margin-bottom: 16px; border: 1px solid var(--border);
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 16px;
+            border: 1px solid var(--border);
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0;
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+            opacity: 0;
+            /* Căn giữa nội dung bên trong thẻ bài đăng */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         @keyframes slideUp {
@@ -49,9 +68,37 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .post-header { display: flex; align-items: center; margin-bottom: 12px; }
-        .avatar { width: 40px; height: 40px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; }
-        .post-img { width: 100%; border-radius: 12px; margin-top: 12px; border: 1px solid var(--border); }
+        .post-header { 
+            display: flex; 
+            flex-direction: column; /* Để avatar và tên xếp dọc khi căn giữa */
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+
+        .avatar { 
+            width: 45px; height: 45px; 
+            background: var(--primary); color: white; 
+            border-radius: 50%; display: flex; 
+            align-items: center; justify-content: center; 
+            font-weight: bold; margin-bottom: 8px; 
+        }
+
+        .post-text {
+            font-size: 16px; 
+            line-height: 1.6;
+            word-break: break-word;
+            white-space: pre-wrap;
+            width: 100%;
+        }
+
+        .post-img { 
+            width: 100%; 
+            max-width: 100%;
+            border-radius: 12px; 
+            margin-top: 15px; 
+            border: 1px solid var(--border); 
+            object-fit: cover;
+        }
 
         /* Floating Button (+) */
         #btnOpenModal {
@@ -70,10 +117,11 @@
         .modal-content {
             background: var(--card-bg); padding: 25px; border-radius: 20px;
             width: 90%; max-width: 400px; animation: modalScale 0.3s ease;
+            text-align: center;
         }
         @keyframes modalScale { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        input, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); box-sizing: border-box; font-family: inherit; }
+        input, textarea { width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); box-sizing: border-box; font-family: inherit; text-align: center; }
         
         .upload-area {
             border: 2px dashed var(--primary); padding: 15px; text-align: center;
@@ -84,7 +132,7 @@
 </head>
 <body>
 
-    <header><h1>9A7 Community</h1></header>
+    <header><h1>Bài đăng</h1></header>
     <button id="themeToggle">🌙</button>
 
     <div class="container" id="listPosts"></div>
@@ -110,7 +158,7 @@
 
 <script>
     const API_URL = "https://69c6a848f272266f3eaceee2.mockapi.io/posts";
-    const IMGBB_API_KEY = "8f08a892aa7d775985fa3c14d1b28eec"; // Đã dán API của bạn
+    const IMGBB_API_KEY = "8f08a892aa7d775985fa3c14d1b28eec"; 
 
     function previewImage(event) {
         const file = event.target.files[0];
@@ -143,7 +191,7 @@
                                 <small style="color:var(--text-sub)">${time}</small>
                             </div>
                         </div>
-                        <div style="font-size:16px; line-height:1.6">${p.content}</div>
+                        <div class="post-text">${p.content}</div>
                         ${p.image ? `<img src="${p.image}" class="post-img">` : ""}
                     </div>
                 `;
@@ -160,10 +208,9 @@
         if (!content) return alert("Nội dung không được để trống!");
         
         btn.disabled = true;
-        btn.innerText = "Đang tải ảnh lên...";
+        btn.innerText = "Đang tải ảnh...";
 
         try {
-            // Tải ảnh lên ImgBB nếu có chọn file
             if (fileInput.files[0]) {
                 const formData = new FormData();
                 formData.append("image", fileInput.files[0]);
@@ -175,9 +222,8 @@
                 imageUrl = imgData.data.url;
             }
 
-            btn.innerText = "Đang lưu bài viết...";
+            btn.innerText = "Đang lưu bài...";
             
-            // Lưu vào MockAPI
             await fetch(API_URL, {
                 method: 'POST',
                 headers: {'content-type':'application/json'},
@@ -190,14 +236,13 @@
             });
 
             closeModal();
-            // Reset form
             document.getElementById('name').value = "";
             document.getElementById('content').value = "";
             document.getElementById('fileInput').value = "";
             document.getElementById('imagePreview').style.display = 'none';
             await loadPosts();
         } catch (e) {
-            alert("Đã xảy ra lỗi khi đăng bài!");
+            alert("Lỗi khi đăng bài!");
         } finally {
             btn.disabled = false;
             btn.innerText = "ĐĂNG BÀI";
