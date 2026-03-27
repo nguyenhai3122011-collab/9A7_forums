@@ -20,14 +20,16 @@
         .post-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); position: relative; }
         .user-name { font-weight: bold; color: #34495e; display: block; margin-bottom: 5px; }
         .post-time { font-size: 11px; color: #95a5a6; position: absolute; top: 15px; right: 15px; }
-        .post-text { color: #444; line-height: 1.5; }
-        .post-img { width: 100%; border-radius: 8px; margin-top: 10px; }
+        .post-text { color: #444; line-height: 1.5; white-space: pre-wrap; }
+        .post-img { width: 100%; border-radius: 8px; margin-top: 10px; display: block; }
+        #errorMessage { color: red; font-size: 13px; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header"><h1>Lớp 9A7 Forum</h1></div>
+    <div id="errorMessage"></div>
 
     <div class="post-form">
         <input type="text" id="name" placeholder="Tên bạn (Bỏ trống để ẩn danh)">
@@ -40,57 +42,90 @@
 </div>
 
 <script>
-    // DÁN LINK MOCKAPI CỦA BẠN VÀO ĐÂY
+    // Kiểm tra kỹ link này: Nếu bạn tạo Resource là "posts" thì phải có chữ "s"
     const API_URL = "https://69c6a848f272266f3eaceee2.mockapi.io/post"; 
 
     // 1. Tải bài viết
     async function loadPosts() {
-        const res = await fetch(API_URL);
-        const posts = await res.json();
-        const div = document.getElementById('listPosts');
-        div.innerHTML = "";
-        
-        // Hiện bài mới nhất lên đầu
-        posts.reverse().forEach(p => {
-            const time = new Date(p.createdAt).toLocaleString('vi-VN');
-            div.innerHTML += `
-                <div class="post-card">
-                    <span class="user-name">👤 ${p.name || "Ẩn danh"}</span>
-                    <span class="post-time">${time}</span>
-                    <div class="post-text">${p.content}</div>
-                    ${p.image ? `<img src="${p.image}" class="post-img">` : ""}
-                </div>
-            `;
-        });
+        try {
+            const res = await fetch(API_URL);
+            if (!res.ok) throw new Error("Không tìm thấy dữ liệu (404). Hãy kiểm tra lại tên Resource trong MockAPI!");
+            
+            const posts = await res.json();
+            const div = document.getElementById('listPosts');
+            div.innerHTML = "";
+            
+            if (posts.length === 0) {
+                div.innerHTML = "<p style='text-align:center; color:#888;'>Chưa có bài đăng nào.</p>";
+                return;
+            }
+
+            // Đảo ngược mảng để bài mới nhất lên đầu
+            [...posts].reverse().forEach(p => {
+                const time = p.createdAt ? new Date(p.createdAt).toLocaleString('vi-VN') : "Vừa xong";
+                div.innerHTML += `
+                    <div class="post-card">
+                        <span class="user-name">👤 ${p.name || "Ẩn danh"}</span>
+                        <span class="post-time">${time}</span>
+                        <div class="post-text">${p.content}</div>
+                        ${p.image ? `<img src="${p.image}" class="post-img" onerror="this.style.display='none'">` : ""}
+                    </div>
+                `;
+            });
+            document.getElementById('errorMessage').innerText = "";
+        } catch (error) {
+            document.getElementById('listPosts').innerHTML = "Lỗi tải dữ liệu.";
+            document.getElementById('errorMessage').innerText = error.message;
+        }
     }
 
     // 2. Thêm bài viết mới
     async function addPost() {
-        const name = document.getElementById('name').value.trim();
-        const content = document.getElementById('content').value.trim();
-        const image = document.getElementById('image').value.trim();
+        const nameInput = document.getElementById('name');
+        const contentInput = document.getElementById('content');
+        const imageInput = document.getElementById('image');
         const btn = document.getElementById('btnSend');
+
+        const name = nameInput.value.trim();
+        const content = contentInput.value.trim();
+        const image = imageInput.value.trim();
 
         if (!content) return alert("Bạn chưa nhập nội dung!");
 
         btn.disabled = true;
         btn.innerText = "Đang gửi...";
 
-        await fetch(API_URL, {
-            method: 'POST',
-            headers: {'content-type':'application/json'},
-            body: JSON.stringify({ name, content, image })
-        });
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'content-type':'application/json'},
+                body: JSON.stringify({ 
+                    name: name || "Ẩn danh", 
+                    content: content, 
+                    image: image,
+                    createdAt: new Date().toISOString() 
+                })
+            });
 
-        // Reset form và tải lại
-        document.getElementById('content').value = "";
-        document.getElementById('image').value = "";
-        btn.disabled = false;
-        btn.innerText = "Đăng bài";
-        loadPosts();
+            if (response.ok) {
+                // Xóa nội dung cũ
+                contentInput.value = "";
+                imageInput.value = "";
+                // Tải lại danh sách bài đăng
+                await loadPosts();
+            } else {
+                alert("Lỗi khi gửi bài!");
+            }
+        } catch (error) {
+            alert("Không thể kết nối đến máy chủ!");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Đăng bài";
+        }
     }
 
-    loadPosts(); // Chạy ngay khi mở web
+    // Chạy ngay khi mở web
+    loadPosts();
 </script>
 
 </body>
